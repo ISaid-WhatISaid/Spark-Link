@@ -474,18 +474,32 @@ function Tag({ children }) {
 }
 
 function Uploader({ onSave }) {
+  type UploadImg = { name: string; type: string; dataUrl: string };
+
   const [text, setText] = useState("");
-  const [files, setFiles] = useState([]);
+  const [files, setFiles] = useState<UploadImg[]>([]);
   const [tags, setTags] = useState("");
 
-  function handleFiles(e) {
-    const list = Array.from(e.target.files || []);
-    Promise.all(list.map(file => new Promise(resolve => {
-      const r = new FileReader();
-      r.onload = () => resolve({ name: file.name, type: file.type, dataUrl: r.result });
-      r.readAsDataURL(file);
-    })) ).then(setFiles);
+    function handleFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    const list = Array.from(e.target.files ?? []) as File[];
+
+    Promise.all(
+      list.map(
+        (file) =>
+          new Promise<UploadImg>((resolve) => {
+            const r = new FileReader();
+            r.onload = () =>
+              resolve({
+                name: file.name,
+                type: file.type,
+                dataUrl: String(r.result ?? ""),
+              });
+            r.readAsDataURL(file);
+          })
+      )
+    ).then(setFiles);
   }
+
 
   function submit() {
     if (!text && files.length === 0) return;
